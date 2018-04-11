@@ -32,96 +32,82 @@ client.on("error", function (err) {
     console.log("Error " + err);
 });
 
-exports.saveKey =  function(key, value, done){
+async function saveKey(key, value){
   var newValue = value;
   if(typeof newValue == 'object'){
     newValue = JSON.stringify(newValue);
   }
-  client.set(key, newValue, function(err, result){
-      done(err, result);    
-  });
+  return client.set(key, newValue);
 }
 
-exports.getKeyValue =  function(key, done){ 
-  
-  client.get(key, function(err, value) {
-      done(err, value);          
-  });
+async function getKeyValue(key){   
+  return client.get(key);
 }
 
-exports.getKeyObject =  function(key, done){ 
-  
-  client.get(key, function(err, value) {
-    done(err, JSON.parse(value));          
-  });
-}
-
-exports.saveHashKey =  function(hname,key, value, done){
+async function saveHashKey(hname,key, value){
   var newValue = value;
   if(typeof newValue == 'object'){
     newValue = JSON.stringify(newValue);
   }
-  client.hset(hname,key, newValue, function(err, result){
-      done(err, result);    
-  });
+  return client.hset(hname,key, newValue);
 }
 
-exports.getHashKeyValue =  function(hname, key, done){ 
-  client.hget(hname, key, function(err, value) {
-      done(err, value);          
-  });
+async function getHashKeyObject(hname, key){ 
+  return client.hget(hname, key);
 }
 
-exports.getHashKeyObject =  function(hname, key, done){ 
-  client.hget(hname, key, function(err, value) {
-      done(err, JSON.parse(value));          
-  });
+async function getHash(hname){ 
+  return client.hgetall(hname);
 }
 
-exports.getHashFullObject =  function(hname, done){ 
-  client.hgetall(hname, function(err, value) {    
-      done(err, value);    
-  });
+async function saveHash(hname, obj){
+  return client.hmset(hname, obj);
+}
+async function deleteHashkey(hname, key){ 
+  return client.hdel(hname, key);
 }
 
-exports.deleteHashkey =  function(hname, key, done){ 
-  client.hdel(hname, key, function(err, value) {    
-      done(err, value);    
-  });
+async function deleteKey(key){ 
+  return client.del(key);
 }
 
-exports.deleteKey =  function(key, done){ 
-  client.del(key, function(err, value) {  
-    done(err, value);          
-  });
+async function getKeyNames(pattern){
+  return client.keys(pattern);
 }
 
-exports.getKeyNames = function(pattern, done){
-  client.keys(pattern, function(err, replies){
-      done(err, replies);          
-  })
+async function addSetValue(setName, value){
+  return client.sadd(setName, value);
 }
 
-exports.addSetValue = function(setName, value, done){
-  client.sadd(setName, value, function(err, value){
-    done(err, value);
-  })
+async function getSetValue(setName){
+  return client.smembers(setName);
 }
 
-exports.getSetValue = function(setName, done){
-  client.smembers(setName, function(err, value){
-    done(err, value);
-  });
+async function saveSetValue(setName, value){
+  return client.sadd(setName, value);
 }
 
-exports.getKeyType = function(keyName, done){
-  client.type(keyName, function(err, value){
-    done(err, value);
-  })
+async function getKeyType(keyName){
+  return client.type(keyName);
 }
 
-exports.getKeyNames = function(pattern, done){
-  client.keys(pattern, function(err, replies){
-      done(err, replies);          
-  })
+async function getKeyNames(pattern){
+  return client.keys(pattern);
+}
+
+module.exports = {
+  getKeyNames,
+  getKeyType,
+  saveSetValue,
+  getSetValue,
+  addSetValue,
+  getKeyNames,
+  deleteKey,
+  deleteHashkey,
+  getHashKeyObject,
+  getHash,
+  saveHash,
+  saveHashKey,
+  getKeyValue,
+  saveKey
 }

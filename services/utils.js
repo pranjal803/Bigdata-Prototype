@@ -1,87 +1,51 @@
-let _ = require('underscore');
 let db = require('./redis');
-let async = require('async');
-exports.insertObject = insertObject = function(parent, myObject, baseKey){
-  _.each(myObject, (value, key) => {
+let _ = require('underscore');
 
-    var insertValue = value;
-    if(_.isArray(value)){
-      insertValue = parent+'/'+key;
-      insertArray(insertValue, value, baseKey);
-      insertIntoBaseKeySet(insertValue, baseKey);
-      insertIntoBaseKeySet(insertValue, parent);
-      insertValue = '~'+insertValue;
-    }else if(_.isObject(value)){
-      insertValue = parent+'/'+key;
-      insertObject(insertValue, value, baseKey);
-      insertIntoBaseKeyMap(insertValue, baseKey);
-      insertIntoBaseKeyMap(insertValue, parent);
-      insertValue = '~'+insertValue;
+async function createObject(obj) {
+    
+    try{
+
+
+        var key = obj.objectType +'_'+ obj.objectId;
+
+        var sendObj = {};
+        for (k in obj) {            
+            if(Array.isArray(obj[k])){            
+                createArray(key+'_'+k, obj[k]);
+                sendObj[k] = '$_'+key+'_'+k;            
+            }else if(typeof obj[k] == 'object'){
+                sendObj[k] = '$_'+obj[k].objectType +'_'+ obj[k].objectId;
+                createObject(obj[k]);            
+            }else{
+                sendObj[k] = obj[k];
+            }
+        }
+            
+        await db.saveHash(key, sendObj);
+        return key;
+    } catch (e) {
+        return e;
     }
 
-    db.saveHashKey(parent, key, insertValue, function(e, done){
+}
 
+async function createArray(key, arr) {
+    
+    let promises = arr.map(async(k)=> {            
+        if(typeof k == 'object'){            
+            await createObject(k);
+            return '$_'+k.objectType +'_'+ k.objectId;            
+        }else{
+            return k;
+        }
     });
 
-          
-  });
+    var newArr = await Promise.all(promises);
+    await db.saveSetValue(key, newArr);
+    
 }
 
-exports.insertArray = insertArray = function(parent, myArray, baseKey){
-
-  _.each(myArray, (value, key)=> {
-
-    var insertValue = value;
-    if(_.isArray(value)){
-      insertValue = parent+'/'+key;
-      insertArray(insertValue, value, baseKey);
-      insertIntoBaseKeySet(insertValue, baseKey);
-      insertIntoBaseKeySet(insertValue, parent);
-      insertValue = '~'+insertValue;
-    }else if(_.isObject(value)){
-      insertValue = parent+'/'+key;
-      insertObject(insertValue, value, baseKey);
-      insertIntoBaseKeyMap(insertValue, baseKey);
-      insertIntoBaseKeyMap(insertValue, parent);
-      insertValue = '~'+insertValue;
-    }
-
-    db.addSetValue(parent, insertValue, (e, done)=>{});
-
-  });
-}
-
-exports.insertIntoBaseKeySet = insertIntoBaseKeySet = function(key, baseKey){
-  db.addSetValue(baseKey+"-set", key, (e, done)=>{});
-}
-
-exports.insertIntoBaseKeyMap = insertIntoBaseKeyMap = function(key, baseKey){
-  db.addSetValue(baseKey+"-map", key, (e, done)=>{});
-}
-
-exports.getKey = function(key, done){
-  console.log(key);
-  db.getKeyObject(key, (err, value)=>{
-    console.log(value);
-    done(err, value);
-  });
-  
-}
-
-exports.deleteKey = function(key, done){
-  // db.getKeyNames(key+"*", (err, values)=>{
-  //   _.each(values, (value)=>{
-  //     db.deleteKey(value, (err, num)=>{});
-  //   });
-  //   done(err, true);
-  // });
-  db.deleteKey(key, (err, val)=>{
-    done(null, true);
-  });
-}
-
-exports.insertKey = function(key, value, done){
-  db.saveKey(key, value, (err, ret)=>{
-    done(err, ret);
-  });
+module.exports = {
+    createObject,
+    createArray
 }
