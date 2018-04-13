@@ -7,73 +7,121 @@ const utils = require('../services/utils');
 const v = new Validator();
 const uuid = require('uuid/v4');
 
-v.addSchema(schema.linkedService, '/LinkedService');
-v.addSchema(schema.planCostShares, '/PlanCostShares');
-v.addSchema(schema.linkedPlanServicesItem, '/LinkedPlanServicesItem');
+//v.addSchema(schema.linkedService, '/LinkedService');
+//v.addSchema(schema.planCostShares, '/PlanCostShares');
+//v.addSchema(schema.linkedPlanServicesItem, '/LinkedPlanServicesItem');
 
+router.post('/schema', function(req, res, next) {
 
-router.post('/',async function(req, res, next) {
-
-    if (v.validate(req.body, schema.plan).valid) {
-        //utils.insertObject(req.params.planName, req.body, req.params.planName);
-        let newUUID = uuid();
-        // utils.insertKey(newUUID, req.body, (er, status)=>{
-        //   console.log(er);
-        //   res.send(newUUID);
-        // })
-                
-        utils.createObject(req.body).then((ret) => {            
-            console.log(ret);
-            res.send(newUUID);
-        }).catch((e) => {
-            console.log(e);
+    utils.postSchema(req.body)
+        .then((resp) => {
+            res.send("Schema Added");
+        })
+        .catch((e) => {
             res.status(500).send('Internal Server Error');
         })
 
+});
 
-    } else {
-        res.status(404).send('Invalid Schema');
+router.put('/schema', function(req, res, next) {
+
+    utils.checkKey('schema')
+        .then((keyExists) => {
+            if (keyExists) {
+                return utils.postSchema(req.body);
+            }
+            res.status(404).send('Schema Not Found');
+        })
+        .then((resp) => {
+            res.send("Schema Updated");
+        })
+        .catch((e) => {
+            res.status(500).send('Internal Server Error');
+        })
+
+});
+
+router.post('/', async function(req, res, next) {
+
+    try{        
+        var myschema = await utils.getSchema();
+
+        if (v.validate(req.body, myschema).valid) {
+
+            let newUUID = uuid();
+            let createdPlan = await utils.createPlan(newUUID, req.body);
+            
+            res.send(newUUID);
+
+        } else {
+            res.status(404).send('Invalid Schema');
+        }
+
+    } catch (e) {
+        res.status(500).send('Internal Server Error');
     }
 });
 
-router.delete('/:planName', function(req, res, next) {
-    utils.deleteKey(req.params.planName, (err, response) => {
-        res.send("DELETED");
-    });
+router.delete('/:planId', function(req, res, next) {
+    
+    utils.deletePlan(req.params.planId)
+        .then((response) => {
+            if(!response){
+                res.status(404).send('Plan Not Found');
+            }else{
+                res.send("Plan Deleted");
+            }
+        })
+        .catch((e) => {
+            res.status(500).send('Internal Server Error');       
+        })
 });
 
-router.patch('/*', function(req, res, next) {
-    res.json({
-        success: "patch"
-    });
-});
+router.put('/:planId', async function(req, res, next) {
+    try{        
+        var myschema = await utils.getSchema();
 
-router.get('/:planName', function(req, res) {
-    utils.getKey(req.params.planName, (err, value) => {
-        if (_.isNull(value)) {
-            res.status(404).send('Not found');
+        if (v.validate(req.body, myschema).valid) {
+            
+            let createdPlan = await utils.createPlan(req.params.planId, req.body);
+            
+            res.send('Plan Updated');
+
         } else {
-            res.send(value);
+            res.status(404).send('Invalid Schema');
         }
-    });
+
+    } catch (e) {
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+router.get('/:planId', async function(req, res, next) {
+    try{
+        let myPlan = await utils.getPlan(req.params.planId);
+        
+        if (!myPlan) {
+            res.status(404).send('Not found');
+            return;
+        }
+
+        res.send(myPlan);
+    } catch(e) {
+        console.log(e);
+        res.status(500).send('Internal Server Error');
+    }        
 });
 
 router.get('*', function(req, res) {
-    res.json({
-        success: false
-    });
+    res.status(404).send('NOT FOUND');
 });
 
 router.post('*', function(req, res) {
-    res.json({
-        success: false
-    });
+    res.status(404).send('NOT FOUND');
 });
 
 router.delete('*', function(req, res) {
-    res.json({
-        success: false
-    });
+    res.status(404).send('NOT FOUND');
 });
 
 
