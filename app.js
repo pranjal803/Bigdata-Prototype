@@ -18,6 +18,8 @@ app.use(cookieParser());
 app.use(morgan('combined'));
 app.use('/', index);
 
+console.log('server running');
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
     var err = new Error('Not Found');
