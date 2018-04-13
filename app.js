@@ -5,7 +5,8 @@ var bodyParser = require('body-parser');
 var morgan = require('morgan')
 
 var index = require('./routes/index');
-
+var token = require('./routes/token');
+var auth = require('./services/auth');
 
 var app = express();
 
@@ -16,7 +17,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(morgan('combined'));
-app.use('/', index);
+
+app.use('/token', token);
+app.use('/', [auth.authenticate, index]);
 
 console.log('server running');
 
