@@ -1,12 +1,12 @@
 var redis = require('redis');
 var _ = require('underscore');
-var port = process.env.REDIS_PORT || 6379;  
+var port = process.env.REDIS_PORT || 6379;
 var host = process.env.REDIS_HOST || '127.0.0.1';
 
-var options= {
+var options = {
     port: port,
     host: host,
-    retry_strategy: function (options) {
+    retry_strategy: function(options) {
         if (options.error && options.error.code === 'ECONNREFUSED') {
             // End reconnecting on a specific error and flush all commands with
             // a individual error
@@ -24,90 +24,215 @@ var options= {
         // reconnect after
         return Math.min(options.attempt * 100, 3000);
     }
-  };
+};
 
 var client = redis.createClient(options);
 
-client.on("error", function (err) {
+client.on("error", function(err) {
     console.log("Error " + err);
 });
 
-async function saveKey(key, value){
-  var newValue = value;
-  if(typeof newValue == 'object'){
-    newValue = JSON.stringify(newValue);
-  }
-  return client.set(key, newValue);
+async function saveKey(key, value) {
+    var newValue = value;
+    if (typeof newValue == 'object') {
+        newValue = JSON.stringify(newValue);
+    }
+
+    return new Promise((resolve, reject) => {
+        client.set(key, newValue, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })
 }
 
-async function getKeyValue(key){   
-  return client.get(key);
+async function getKeyValue(key) {
+
+    return new Promise((resolve, reject) => {
+        client.get(key, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })
 }
 
-async function saveHashKey(hname,key, value){
-  var newValue = value;
-  if(typeof newValue == 'object'){
-    newValue = JSON.stringify(newValue);
-  }
-  return client.hset(hname,key, newValue);
+async function saveHashKey(hname, key, value) {
+    var newValue = value;
+    if (typeof newValue == 'object') {
+        newValue = JSON.stringify(newValue);
+    }
+
+    return new Promise((resolve, reject) => {
+        client.hset(hname, key, newValue, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })
 }
 
-async function getHashKeyObject(hname, key){ 
-  return client.hget(hname, key);
+async function getHashKeyObject(hname, key) {
+
+    return new Promise((resolve, reject) => {
+        client.hget(hname, key, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })
 }
 
-async function getHash(hname){ 
-  return client.hgetall(hname);
+async function getHash(hname) {
+
+    return new Promise((resolve, reject) => {
+        client.hgetall(hname, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })
 }
 
-async function saveHash(hname, obj){
-  return client.hmset(hname, obj);
+async function saveHash(hname, obj) {
+
+    return new Promise((resolve, reject) => {
+        client.hmset(hname, obj, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })
 }
-async function deleteHashkey(hname, key){ 
-  return client.hdel(hname, key);
+async function deleteHashkey(hname, key) {
+
+    return new Promise((resolve, reject) => {
+        client.hdel(hname, key, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })
 }
 
-async function deleteKey(key){ 
-  return client.del(key);
+async function deleteKey(key) {
+
+    return new Promise((resolve, reject) => {
+        client.del(key, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })
 }
 
-async function getKeyNames(pattern){
-  return client.keys(pattern);
+async function getKeyNames(pattern) {
+
+    return new Promise((resolve, reject) => {
+        client.keys(pattern, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })
 }
 
-async function addSetValue(setName, value){
-  return client.sadd(setName, value);
+async function addSetValue(setName, value) {
+
+    return new Promise((resolve, reject) => {
+        client.sadd(setName, value, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })
 }
 
-async function getSetValue(setName){
-  return client.smembers(setName);
+async function getSetValue(setName) {
+
+    return new Promise((resolve, reject) => {
+        client.smembers(setName, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })
 }
 
-async function saveSetValue(setName, value){
-  return client.sadd(setName, value);
+async function saveSetValue(setName, value) {
+
+    return new Promise((resolve, reject) => {
+        client.sadd(setName, value, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })
 }
 
-async function getKeyType(keyName){
-  return client.type(keyName);
+async function getKeyType(keyName) {
+
+    return new Promise((resolve, reject) => {
+        client.type(keyName, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        })
+    })
 }
 
-async function getKeyNames(pattern){
-  return client.keys(pattern);
+async function getKeyNames(pattern) {
+
+    return new Promise((resolve, reject) => {
+        client.keys(pattern, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })
+}
+
+async function checkExists(key) {
+
+    return new Promise((resolve, reject) => {
+        client.exists(key, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })   
 }
 
 module.exports = {
-  getKeyNames,
-  getKeyType,
-  saveSetValue,
-  getSetValue,
-  addSetValue,
-  getKeyNames,
-  deleteKey,
-  deleteHashkey,
-  getHashKeyObject,
-  getHash,
-  saveHash,
-  saveHashKey,
-  getKeyValue,
-  saveKey
+    getKeyNames,
+    getKeyType,
+    saveSetValue,
+    getSetValue,
+    addSetValue,
+    getKeyNames,
+    deleteKey,
+    deleteHashkey,
+    getHashKeyObject,
+    getHash,
+    saveHash,
+    saveHashKey,
+    getKeyValue,
+    saveKey,
+    checkExists
 }
