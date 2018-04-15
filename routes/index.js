@@ -50,7 +50,8 @@ router.post('/', async function(req, res, next) {
 
             let newUUID = uuid();
             let createdPlan = await utils.createPlan(newUUID, req.body);
-            
+            await utils.queuePlan('post', req.body);
+
             res.send(newUUID);
 
         } else {
@@ -58,6 +59,7 @@ router.post('/', async function(req, res, next) {
         }
 
     } catch (e) {
+        console.log(e);
         res.status(500).send('Internal Server Error');
     }
 });
@@ -84,14 +86,14 @@ router.put('/:planId', async function(req, res, next) {
         if (v.validate(req.body, myschema).valid) {
             
             let createdPlan = await utils.createPlan(req.params.planId, req.body);
-            
+            await utils.queuePlan('put', req.body);
             res.send('Plan Updated');
 
         } else {
             res.status(404).send('Invalid Schema');
         }
 
-    } catch (e) {
+    } catch (e) {        
         res.status(500).send('Internal Server Error');
     }
 });

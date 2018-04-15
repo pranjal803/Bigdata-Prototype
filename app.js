@@ -10,6 +10,8 @@ var auth = require('./services/auth');
 
 var app = express();
 
+var indexer = require('./indexer');
+
 app.enable('etag');
 app.set('etag', 'strong')
 
@@ -20,6 +22,8 @@ app.use(morgan('combined'));
 
 app.use('/token', token);
 app.use('/', [auth.authenticate, index]);
+
+indexer.startIndexer();
 
 console.log('server running');
 
