@@ -219,6 +219,55 @@ async function checkExists(key) {
     })   
 }
 
+async function lpush(list, value) {
+
+    return new Promise((resolve, reject) => {
+        client.lpush(list, value, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })   
+}
+
+async function rpop(list) {
+
+    return new Promise((resolve, reject) => {
+        client.rpop(list, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })   
+}
+
+async function rpoplpush(list1, list2) {
+    return new Promise((resolve, reject) => {
+        client.rpoplpush(list1, list2, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })   
+}
+
+async function listLength(list) {
+
+    return new Promise((resolve, reject) => {
+        client.llen(list, (err, res) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(res);
+        });
+    })   
+}
+
+
+
 module.exports = {
     getKeyNames,
     getKeyType,
@@ -234,5 +283,9 @@ module.exports = {
     saveHashKey,
     getKeyValue,
     saveKey,
-    checkExists
+    checkExists,
+    lpush,
+    rpop,
+    rpoplpush,
+    listLength
 }

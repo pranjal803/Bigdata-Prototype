@@ -201,11 +201,28 @@ async function getSchema() {
     }
 }
 
+async function queuePlan(method, plan) {
+    try {
+        
+        let sendObj = {
+            method: method,
+            plan: plan
+        }
+
+        await db.lpush('searchQueue', JSON.stringify(sendObj));
+
+        return true;        
+    } catch (e) {
+        throw e;
+    }
+}
+
 module.exports = {
     createPlan,
     getPlan,
     postSchema,
     checkKey,
     getSchema,
-    deletePlan
+    deletePlan,
+    queuePlan
 }
